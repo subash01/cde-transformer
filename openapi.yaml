@@ -1,0 +1,78 @@
+openapi: 3.0.0
+info:
+  title: CDE Transformer API
+  description: API to fetch and aggregate file metadata from multiple Construction Data Environments (CDEs). [cite: 3]
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /v1/files:
+    get:
+      summary: Retrieves a unified list of files from specified CDE providers.
+      description: |
+        Fetches file metadata from one or more CDEs (e.g., bim360, procore),
+        transforms the data into a common schema, resolves duplicates, and
+        returns a single, sorted list. 
+      parameters:
+        - in: query
+          name: providers
+          schema:
+            type: string
+          required: true
+          description: A comma-separated list of CDE providers.
+          example: "bim360,procore"
+        - in: query
+          name: project
+          schema:
+            type: string
+          required: true
+          description: The ID of the project to fetch files for.
+          example: "project-123"
+      responses:
+        '200':
+          description: An aggregated list of file metadata.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CdeFile'
+        '400':
+          description: Bad Request - Missing required query parameters.
+        '500':
+          description: Internal Server Error.
+
+components:
+  schemas:
+    CdeFile:
+      type: object
+      properties:
+        source:
+          type: string
+          enum: [bim360, procore, viewpoint, trimble, aconex]
+          example: "bim360"
+        projectId:
+          type: string
+          example: "project-123"
+        fileId:
+          type: string
+          example: "urn:adsk.wipprod:fs.file:vf.A_Sample_File"
+        name:
+          type: string
+          example: "Architecture-Plan-Level-01.rvt"
+        version:
+          type: string
+          example: "v2"
+        size:
+          type: number
+          example: 543210
+        downloadUrl:
+          type: string
+          format: uri
+          example: "https://developer.api.autodesk.com/..."
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-07-15T10:00:00Z"
